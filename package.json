@@ -1,0 +1,46 @@
+{
+  "name": "dsh-client-voice-input",
+  "description": "DSH 语音输入插件：输入框 🎤 按住说话，浏览器内 sherpa-onnx WebAssembly 本地识别（中文），无需后端",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "keywords": [
+    "deepseek",
+    "harness",
+    "dsh",
+    "voice",
+    "speech-to-text",
+    "asr",
+    "sherpa-onnx",
+    "wasm"
+  ],
+  "author": "widesignal0208",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/widesignal0208/dsh-voice-input.git"
+  },
+  "license": "MIT",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "@deepseek-ai/dsh-client-ui-conversation": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.6",
+    "@deepseek-ai/cordis": "^4.0.1"
+  }
+}
