@@ -47,32 +47,40 @@ wasm 识别依赖 4 个文件（在 `wasm/` 目录）：
 | `sherpa-onnx-wasm-main-asr.wasm` | ~13 MB | WebAssembly 二进制 |
 | `sherpa-onnx-wasm-main-asr.data` | ~26 MB | 中文语音模型（打包进虚拟文件系统） |
 
-这些文件需要在 `lib/client.js` 顶部的 `WASM_BASES` 里指定一个浏览器能访问到的地址。
+这些文件需要在 `lib/client.js` 顶部的 `WASM_SOURCES` 里指定浏览器能访问到的地址。
 
-### 为什么不能用 jsDelivr
+### 为什么 `.js/.wasm` 走 jsDelivr、`.data` 走 raw
 
-jsDelivr **单文件上限 20 MB**，而 `sherpa-onnx-wasm-main-asr.data` 是 26 MB，放不下。所以模型改用 **raw.githubusercontent.com 直链**托管（单文件支持 100 MB，且自带 CORS 头）。
+两个 CDN 各有各的限制，必须**混搭**：
 
-### 推荐分发方式：提交到 GitHub + raw 直链
+- **raw.githubusercontent.com** 把 `.js` 当 `text/plain` 返回、且带 `nosniff` 头，浏览器会**拒绝把 `.js` 当脚本执行**；但它单文件支持 100 MB，能放 26 MB 的 `.data`（`.data` 是 fetch 下载，不受 nosniff 影响）。
+- **jsDelivr** 对 `.js` 返回正确的 `application/javascript`、对 `.wasm` 返回 `application/wasm`，能正常加载；但它**单文件上限 20 MB**，放不下 26 MB 的 `.data`。
+
+所以：`.js` + `.wasm`（都 <20 MB）走 jsDelivr，`.data`（26 MB）走 raw。
+
+### 分发方式：提交到 GitHub
 
 1. 把 4 个文件直接**提交进 Git 仓库**（`wasm/` 目录，26 MB 远低于 GitHub 100 MB 限制）。
-2. `lib/client.js` 顶部的 `WASM_BASES` 已按顺序配置好：
+2. `lib/client.js` 顶部的 `WASM_SOURCES` 已按顺序配置好：
 
 ```js
-const WASM_BASES = [
-  "https://raw.githubusercontent.com/widesignal0208/dsh-voice-input/main/wasm/",
-  "http://127.0.0.1:8123/wasm/",   // 本地开发回退
+const WASM_SOURCES = [
+  {
+    js:   "https://cdn.jsdelivr.net/gh/widesignal0208/dsh-voice-input@main/wasm/",
+    data: "https://raw.githubusercontent.com/widesignal0208/dsh-voice-input/main/wasm/",
+  },
+  { js: "http://127.0.0.1:8123/wasm/", data: "http://127.0.0.1:8123/wasm/" }, // 本地开发兜底
 ];
 ```
 
-浏览器会先试第一个地址，失败自动切到第二个。推送后第一个地址即可用，本地开发用第二个。
+浏览器会先试第一个源，失败自动切到第二个。推送后第一个源即可用，本地开发用第二个。
 
-> 国内访问 `raw.githubusercontent.com` 较慢时，可在 `WASM_BASES` 第一项前加 `https://gh-proxy.com/` 前缀加速。
+> 国内访问这两个 CDN 较慢时，可在对应地址前加 `https://gh-proxy.com/` 前缀加速。
 
 ## 发布步骤（给作者）
 
 1. `package.json` 里 `author` 和 `repository` 已填好（用户名 `widesignal0208`）。
-2. `lib/client.js` 里的 `WASM_BASES` 已填好 raw 直链地址（`main` 分支）。
+2. `lib/client.js` 里的 `WASM_SOURCES` 已填好 jsDelivr + raw 地址（`main` 分支）。
 3. 在 GitHub 新建一个空仓库 `dsh-voice-input`（不要勾选 README），然后推送：
 
 ```bash
@@ -85,7 +93,7 @@ git remote add origin https://github.com/widesignal0208/dsh-voice-input.git
 git push -u origin main
 ```
 
-4. 推送完成后，别人下载插件时浏览器会自动从 `raw.githubusercontent.com/.../main/wasm/` 拉取模型，开箱即用。
+4. 推送完成后，别人下载插件时浏览器会自动从 jsDelivr/raw 拉取模型，开箱即用。
 
 ## 本地开发（有后端回退）
 
@@ -95,7 +103,7 @@ git push -u origin main
 python3 voice_server.py   # 提供 /recognize 后端识别 + /wasm/ 模型静态服务，默认 8123
 ```
 
-此时 `WASM_BASES` 里的 `http://127.0.0.1:8123/wasm/` 会自动兜底生效（第一个 GitHub 地址不可用时会切到它）。
+此时 `WASM_SOURCES` 里的 `http://127.0.0.1:8123/wasm/` 会自动兜底生效（第一个源不可用时会切到它）。
 
 ## 目录结构
 
