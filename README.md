@@ -77,24 +77,6 @@ const WASM_SOURCES = [
 
 > 国内访问这两个 CDN 较慢时，可在对应地址前加 `https://gh-proxy.com/` 前缀加速。
 
-## 发布步骤（给作者）
-
-1. `package.json` 里 `author` 和 `repository` 已填好（用户名 `widesignal0208`）。
-2. `lib/client.js` 里的 `WASM_SOURCES` 已填好 jsDelivr + raw 地址（`main` 分支）。
-3. 在 GitHub 新建一个空仓库 `dsh-voice-input`（不要勾选 README），然后推送：
-
-```bash
-cd dsh-voice-input
-git init
-git add .
-git commit -m "init: dsh voice input plugin (wasm)"
-git branch -M main
-git remote add origin https://github.com/widesignal0208/dsh-voice-input.git
-git push -u origin main
-```
-
-4. 推送完成后，别人下载插件时浏览器会自动从 jsDelivr/raw 拉取模型，开箱即用。
-
 ## 本地开发（有后端回退）
 
 本地开发时保留后端更省心：
